@@ -1,17 +1,73 @@
 import lejos.nxt.*;
 
 public class Main {
-
+	static LightSensor lightLeft = new LightSensor(SensorPort.S1);
+	static LightSensor lightRight = new LightSensor(SensorPort.S2);
+	static LightSensor lightSide = new LightSensor(SensorPort.S3);
+	
+	static NXTRegulatedMotor motorRight = Motor.A;
+	static NXTRegulatedMotor motorLeft = Motor.B;
+	
 	public static void main(String[] args) {
+		// Turn on Led's on sensors
+		lightLeft.setFloodlight(true);
+		lightRight.setFloodlight(true);
+		lightSide.setFloodlight(true);
 		
-		LightSensor lightLeft = new LightSensor(SensorPort.S1);
-		LightSensor lightRight = new LightSensor(SensorPort.S2);
-		LightSensor lightSide = new LightSensor(SensorPort.S3);
-		
+		calibrateSensors();
 		
 		while(true) {
-			}	
+			// Do some driving stuff
+		}	
 		
+	}
+	
+	private static void calibrateSensors() {
+		final int ROTATE_DEGREES = 20; 
+		
+		int rightMax = -1, rightMin = 10000, leftMax = -1, leftMin = 10000, sideMax = -1, sideMin = 10000;
+		
+		for(int i = 0; i < 3; ++i) {
+			switch (i) {
+			case 0:
+				motorRight.rotate(ROTATE_DEGREES, true);
+				motorLeft.rotate(-ROTATE_DEGREES, true);
+				break;
+				
+			case 1:
+				motorRight.rotate((-ROTATE_DEGREES)*2, true);
+				motorLeft.rotate(ROTATE_DEGREES*2, true);
+				break;
+				
+			case 2:
+				motorRight.rotate(ROTATE_DEGREES, true);
+				motorLeft.rotate(-ROTATE_DEGREES, true);
+				break;
+				
+			default:
+				break;
+			
+			}
+			
+			while(motorRight.isMoving() || motorLeft.isMoving()) {
+				int rightVal = lightRight.getNormalizedLightValue();
+				int leftVal = lightLeft.getNormalizedLightValue();
+				int sideVal = lightSide.getNormalizedLightValue();
+				
+				if(rightVal > rightMax) rightMax = rightVal;
+				if(rightVal < rightMin) rightMin = rightVal;
+				if(leftVal > leftMax) leftMax = leftVal;
+				if(leftVal < leftMin) leftMin = leftVal;
+				if(sideVal > sideMax) sideMax = sideVal;
+				if(sideVal < sideMin) sideMin = sideVal;
+			}
+		}
+		lightRight.setHigh(rightMax);
+		lightRight.setLow(rightMin);
+		lightLeft.setHigh(leftMax);
+		lightLeft.setLow(leftMin);
+		lightSide.setHigh(sideMax);
+		lightSide.setLow(sideMin);
 	}
 
 }
